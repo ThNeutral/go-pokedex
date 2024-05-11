@@ -16,8 +16,7 @@ var (
 	numberOfElements        = 20
 	maximumNumberOfElements = 32000
 
-	savedLocations       = make([]LocationType, 20)
-	hasReachedBoundaries = []bool{true, false}
+	savedLocations = make([]LocationType, 20)
 )
 
 type LocationType struct {
@@ -30,8 +29,13 @@ type LocationSetType struct {
 	Results []LocationType `json:"results"`
 }
 
-func getLocations() (*LocationSetType, error) {
-	url := fmt.Sprintf("%slocation?offset=%v&limit=%v", baseUrl, currentOffset, numberOfElements)
+func getLocations(isForward bool) (*LocationSetType, error) {
+	offset := currentOffset
+	if !isForward {
+		offset -= numberOfElements
+	}
+
+	url := fmt.Sprintf("%slocation?offset=%v&limit=%v", baseUrl, offset, numberOfElements)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("communication error occured. Error: %v", err.Error())
@@ -54,12 +58,12 @@ func getLocations() (*LocationSetType, error) {
 }
 
 func mapCallback() error {
-	if hasReachedBoundaries[1] {
+	if currentOffset > maximumNumberOfElements {
 		fmt.Println("No more data to fetch")
 		return nil
 	}
 
-	locs, err := getLocations()
+	locs, err := getLocations(true)
 	if err != nil {
 		return err
 	}
@@ -68,9 +72,6 @@ func mapCallback() error {
 	savedLocations = locs.Results
 
 	currentOffset += numberOfElements
-
-	hasReachedBoundaries[0] = currentOffset == 0
-	hasReachedBoundaries[1] = currentOffset > maximumNumberOfElements
 
 	fmt.Printf("\n")
 	for _, loc := range locs.Results {
@@ -82,13 +83,13 @@ func mapCallback() error {
 }
 
 func mapBackCallback() error {
-	if hasReachedBoundaries[0] {
+	if currentOffset < numberOfElements*2 {
 		fmt.Println("No more data to fetch")
 		return nil
 	}
 
 	currentOffset -= numberOfElements
-	locs, err := getLocations()
+	locs, err := getLocations(false)
 	if err != nil {
 		currentOffset += numberOfElements
 		return err
@@ -96,9 +97,6 @@ func mapBackCallback() error {
 
 	maximumNumberOfElements = locs.Count
 	savedLocations = locs.Results
-
-	hasReachedBoundaries[0] = currentOffset == 0
-	hasReachedBoundaries[1] = currentOffset > maximumNumberOfElements
 
 	fmt.Printf("\n")
 	for _, loc := range locs.Results {
