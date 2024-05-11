@@ -16,6 +16,7 @@ var commandsMap = getCommandsMap()
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println("Welcome! Write \"help\" to get help message")
 	for {
 		fmt.Printf("pokedex > ")
 		scanner.Scan()

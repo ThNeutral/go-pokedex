@@ -20,7 +20,7 @@ func helpCallback(m map[string]*Command) func() error {
 }
 
 func exitCallback() error {
-	fmt.Println("\nGoodbye")
+	fmt.Println("Goodbye!")
 	os.Exit(0)
 
 	return nil

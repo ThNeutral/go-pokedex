@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
@@ -17,6 +18,10 @@ var (
 	maximumNumberOfElements = 32000
 
 	savedLocations = make([]LocationType, 20)
+
+	cache = getNewCache(CacheConfig{
+		DeleteInterval: 5 * time.Minute,
+	})
 )
 
 type LocationType struct {
@@ -63,9 +68,17 @@ func mapCallback() error {
 		return nil
 	}
 
-	locs, err := getLocations(true)
-	if err != nil {
-		return err
+	var locs *LocationSetType
+
+	if cache.Get(currentOffset) != nil {
+		locs = cache.Get(currentOffset)
+	} else {
+		l, err := getLocations(true)
+		if err != nil {
+			return err
+		}
+		cache.Add(currentOffset, l)
+		locs = l
 	}
 
 	maximumNumberOfElements = locs.Count
@@ -88,11 +101,20 @@ func mapBackCallback() error {
 		return nil
 	}
 
+	var locs *LocationSetType
+
 	currentOffset -= numberOfElements
-	locs, err := getLocations(false)
-	if err != nil {
-		currentOffset += numberOfElements
-		return err
+	if cache.Get(currentOffset-numberOfElements) != nil {
+		locs = cache.Get(currentOffset - numberOfElements)
+	} else {
+
+		l, err := getLocations(false)
+		if err != nil {
+			currentOffset += numberOfElements
+			return err
+		}
+		cache.Add(currentOffset-numberOfElements, l)
+		locs = l
 	}
 
 	maximumNumberOfElements = locs.Count
