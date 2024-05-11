@@ -29,6 +29,18 @@ func exitCallback() error {
 func getCommandsMap() map[string]*Command {
 	m := make(map[string]*Command)
 
+	m["map"] = &Command{
+		name:        "map",
+		description: "Get next 20 locations",
+		callback:    mapCallback,
+	}
+
+	m["mapb"] = &Command{
+		name:        "mapb",
+		description: "Get previous 20 locations",
+		callback:    mapBackCallback,
+	}
+
 	m["help"] = &Command{
 		name:        "help",
 		description: "Displays help message",
