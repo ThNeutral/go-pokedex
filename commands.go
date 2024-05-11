@@ -5,21 +5,21 @@ import (
 	"os"
 )
 
-func helpCallback(m map[string]*Command) func() error {
-	str := "\n"
+func helpCallback(m map[string]*Command) func(_ string) error {
+	str := ""
 
 	for _, command := range m {
 		str += fmt.Sprintf("%s: %s\n", command.name, command.description)
 	}
 
-	return func() error {
+	return func(_ string) error {
 		fmt.Println(str)
 
 		return nil
 	}
 }
 
-func exitCallback() error {
+func exitCallback(_ string) error {
 	fmt.Println("Goodbye!")
 	os.Exit(0)
 
@@ -31,14 +31,38 @@ func getCommandsMap() map[string]*Command {
 
 	m["map"] = &Command{
 		name:        "map",
-		description: "Get next 20 locations",
+		description: "Gets next 20 locations",
 		callback:    mapCallback,
 	}
 
 	m["mapb"] = &Command{
 		name:        "mapb",
-		description: "Get previous 20 locations",
+		description: "Gets previous 20 locations",
 		callback:    mapBackCallback,
+	}
+
+	m["explore-location"] = &Command{
+		name:        "explore-location",
+		description: "Explores input location. Usage example: \"explore-location example-location\"",
+		callback:    exploreLocationCallback,
+	}
+
+	m["explore-area"] = &Command{
+		name:        "explore-area",
+		description: "Explores input area. Usage example: \"explore-area example-area\"",
+		callback:    exploreAreaCallback,
+	}
+
+	m["catch"] = &Command{
+		name:        "explore-pokemon",
+		description: "Explores species of given pokemon. Usage example: \"explore-area example-pokemon\"",
+		callback:    catchPokemonCallback,
+	}
+
+	m["pokedex"] = &Command{
+		name:        "Pokedex",
+		description: "Show pokedex",
+		callback:    showPokedexCallback,
 	}
 
 	m["help"] = &Command{

@@ -5,27 +5,27 @@ import (
 	"time"
 )
 
-type CacheEntry struct {
+type CacheEntry[T any] struct {
 	CreatedAt time.Time
-	Val       *LocationSetType
+	Val       *T
 }
 
 type CacheConfig struct {
 	DeleteInterval time.Duration
 }
 
-type Cache struct {
+type Cache[T any] struct {
 	Ticker *time.Ticker
 	Config CacheConfig
 	Mutex  sync.Mutex
-	Data   map[int]*CacheEntry
+	Data   map[string]*CacheEntry[T]
 }
 
-func getNewCache(config CacheConfig) *Cache {
-	c := &Cache{
+func getNewCache[T any](config CacheConfig) *Cache[T] {
+	c := &Cache[T]{
 		Config: config,
 		Ticker: time.NewTicker(config.DeleteInterval),
-		Data:   make(map[int]*CacheEntry),
+		Data:   make(map[string]*CacheEntry[T]),
 	}
 
 	go c.readLoop()
@@ -33,8 +33,8 @@ func getNewCache(config CacheConfig) *Cache {
 	return c
 }
 
-func (c *Cache) Add(key int, value *LocationSetType) {
-	ce := &CacheEntry{
+func (c *Cache[T]) Add(key string, value *T) {
+	ce := &CacheEntry[T]{
 		CreatedAt: time.Now(),
 		Val:       value,
 	}
@@ -43,7 +43,7 @@ func (c *Cache) Add(key int, value *LocationSetType) {
 	c.Mutex.Unlock()
 }
 
-func (c *Cache) Get(key int) *LocationSetType {
+func (c *Cache[T]) Get(key string) *T {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	d := c.Data[key]
@@ -53,7 +53,7 @@ func (c *Cache) Get(key int) *LocationSetType {
 	return c.Data[key].Val
 }
 
-func (c *Cache) readLoop() {
+func (c *Cache[T]) readLoop() {
 	for {
 		<-c.Ticker.C
 		c.Mutex.Lock()
